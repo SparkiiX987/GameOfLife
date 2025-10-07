@@ -30,67 +30,61 @@ private:
     std::function<void(std::vector<int> grid, std::vector<std::tuple<int, int>*> AliveCells, int sizeX, int sizeY, int nbIteration)> CallBack;
 };
 
-void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> AliveCells, int sizeX, int sizeY, int nbIteration) {
-    std::vector<std::tuple<int, int>*> gridCoo;
-    for (int x = 0; x < sizeX; x++)
+void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> AliveCells, int sizeX, int sizeY, int nbIteration) 
+{
+    grid.resize(sizeX * sizeY, 0);
+
+    for (auto cell : AliveCells)
     {
-        for (int y = 0; y < sizeY; y++)
-        {
-            grid.push_back(0);
-            gridCoo.push_back(new std::tuple<int, int>(x, y));
-        }
+        grid[std::get<0>(*cell) * sizeY + std::get<1>(*cell)] = 1;
     }
 
+    for (int iter = 0; iter < nbIteration; ++iter) 
+    {
+        std::vector<int> newGrid = grid;
 
-    for (int i = 0; i < AliveCells.size(); i++)
-    {
-        grid[std::get<0>(*AliveCells[i]) * sizeY + std::get<1>(*AliveCells[i])] = 1;
-        
-    }
-     
-    for (int i = 0; i < nbIteration; i++)
-    {
-        for (int z = 0; z < grid.size(); z++)
+        for (int x = 0; x < sizeX; ++x) 
         {
-            int nbVoisin = 0;
-            for (int x = -1; x < 2; x++)
+            for (int y = 0; y < sizeY; ++y) 
             {
-                for (int y = -1; y < 2; y++)
+
+                int nbVoisin = 0;
+                for (int dx = -1; dx <= 1; ++dx) 
                 {
-                    if ((std::get<0>(*gridCoo[i]) + x) * sizeY + (std::get<1>(*gridCoo[i]) + y) < grid.size())
+                    for (int dy = -1; dy <= 1; ++dy) 
                     {
-                        if (grid[(std::get<0>(*gridCoo[i]) + x) * sizeY + (std::get<1>(*gridCoo[i]) + y)] == 1)
-                        {
-                            nbVoisin++;
-                        }
+                        if (dx == 0 && dy == 0) { continue; }
+
+                        int nx = x + dx, ny = y + dy;
+
+                        if (nx >= 0 && nx < sizeX && ny >= 0 && ny < sizeY)
+                        { nbVoisin += grid[nx * sizeY + ny]; }
                     }
                 }
-            }
 
-            if (grid[z] == 0 && nbVoisin == 3)
-            {
-                grid[z] = 1;
-            }
-            else if (grid[z] == 1 && (nbVoisin == 2 || nbVoisin == 3))
-            {
-                grid[z] == 0;
-            }
-            else
-            {
-                grid[z] = 1;
+                int idx = x * sizeY + y;
+                if (grid[idx] == 1 && (nbVoisin < 2 || nbVoisin > 3))
+                { newGrid[idx] = 0; }
+
+                else if (grid[idx] == 0 && nbVoisin == 3)
+                { newGrid[idx] = 1; }
             }
         }
 
-        for (int a = 0; a < sizeX; a++)
+        grid = newGrid;
+
+        for (int a = 0; a < sizeX; ++a) 
         {
-            for (int b = 0; b < sizeX; b++)
+            for (int b = 0; b < sizeY; ++b)
             {
                 std::cout << grid[a * sizeY + b];
             }
-                std::cout << std::endl;
+            std::cout << '\n';
         }
+        std::cout << "--------------------------\n";
     }
 }
+
 
 int main(int argc, char* argv[]) {
 
@@ -100,6 +94,7 @@ int main(int argc, char* argv[]) {
     int NbrIteration = 0;
     bool IsFloodFillFinished = false;
 
+    std::vector<std::tuple<int, int>*> aliveCells;
     auto TimeNow = std::chrono::high_resolution_clock::now();
     while (NbrIteration <= MaxIteration || IsFloodFillFinished) {
         std::chrono::steady_clock::time_point NewTimeNow = std::chrono::steady_clock::now();
@@ -109,12 +104,27 @@ int main(int argc, char* argv[]) {
         TimedFunction.SubstractTime(ElapsedTime.count());
         if (TimedFunction.IsFinished()) {
 
-            (TimedFunction.GetCallBack())();
+            std::vector<int> grid;
+
+            aliveCells.push_back(new std::tuple<int, int>(4, 5));
+            aliveCells.push_back(new std::tuple<int, int>(5, 5));
+            aliveCells.push_back(new std::tuple<int, int>(6, 5));
+
+            int sizeX = 10;
+            int sizeY = 10;
+            int nbIteration = 10;
+
+            (TimedFunction.GetCallBack())(grid, aliveCells, sizeX, sizeY, nbIteration);
+
             TimedFunction.Restart();
 
             NbrIteration++;
         }
     }
+
+    
+    for (auto cell : aliveCells)
+        delete cell;
 
     return 0;
 }
