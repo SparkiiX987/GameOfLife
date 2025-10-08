@@ -32,8 +32,10 @@ private:
 
 void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> AliveCells, int sizeX, int sizeY, int nbIteration) 
 {
+    //redimentionne la grid avec la taille donné par sizeX et sizeY et les met à 0 (cellule morte)
     grid.resize(sizeX * sizeY, 0);
 
+    //assigne les cellule vivante en fonction des coordonée dans AliveCells
     for (auto cell : AliveCells)
     {
         grid[std::get<0>(*cell) * sizeY + std::get<1>(*cell)] = 1;
@@ -41,13 +43,14 @@ void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> Al
 
     for (int iter = 0; iter < nbIteration; ++iter) 
     {
+        //grille temporaire pour faire les changements sans affecter la grille d'origine ( ce qui peut fausser les calculs)
         std::vector<int> newGrid = grid;
 
         for (int x = 0; x < sizeX; ++x) 
         {
             for (int y = 0; y < sizeY; ++y) 
             {
-
+                //calcul le nombre de voisin que la cellule a
                 int nbVoisin = 0;
                 for (int dx = -1; dx <= 1; ++dx) 
                 {
@@ -62,6 +65,8 @@ void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> Al
                     }
                 }
 
+
+                //les règles du Game of life ( si la cellule nait ou meurt
                 int idx = x * sizeY + y;
                 if (grid[idx] == 1 && (nbVoisin < 2 || nbVoisin > 3))
                 { newGrid[idx] = 0; }
@@ -73,11 +78,12 @@ void GameOfLifeStep(std::vector<int> grid, std::vector<std::tuple<int, int>*> Al
 
         grid = newGrid;
 
-        for (int a = 0; a < sizeX; ++a) 
+        // pour afficher la grid
+        for (int x = 0; x < sizeX; ++x) 
         {
-            for (int b = 0; b < sizeY; ++b)
+            for (int y = 0; y < sizeY; ++y)
             {
-                std::cout << grid[a * sizeY + b];
+                std::cout << grid[x * sizeY + y];
             }
             std::cout << '\n';
         }
